@@ -2,47 +2,34 @@
 <html lang="ru">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
-    <title>Vintage Chess</title>
+    <title>Chess Game</title>
     <link rel="stylesheet" href="https://unpkg.com/@chrisoakman/chessboardjs@1.0.0/dist/chessboard-1.0.0.min.css">
     <style>
-        @import url('https://fonts.googleapis.com/css2?family=Playfair+Display:wght@700&display=swap');
-        
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-        }
-        
         body {
-            font-family: 'Playfair Display', serif;
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 20px;
             display: flex;
             flex-direction: column;
             align-items: center;
-            justify-content: center;
+            background: linear-gradient(135deg, #d4a574 0%, #8b6f47 100%);
             min-height: 100vh;
-            background: radial-gradient(ellipse at center, #d4a574 0%, #8b6f47 100%);
-            color: #2c1810;
-            padding: 20px;
         }
         
         .status {
             font-size: 24px;
-            font-weight: 700;
+            font-weight: bold;
             margin-bottom: 20px;
-            text-align: center;
             color: #2c1810;
-            text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.3);
-            letter-spacing: 1px;
+            text-align: center;
         }
         
         #board {
             width: 340px;
             max-width: 90vw;
-            margin-bottom: 25px;
-            touch-action: none;
-            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.5), 0 0 0 8px #5c4033, 0 0 0 12px #8b6f47;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.5);
             border-radius: 4px;
         }
         
@@ -54,54 +41,48 @@
             background-color: #6b4423 !important;
         }
         
-        .piece-417db {
-            width: 100% !important;
-            height: 100% !important;
-            background-size: contain !important;
-            background-repeat: no-repeat !important;
-            background-position: center !important;
-        }
-        
         .controls {
             display: flex;
-            gap: 15px;
-            margin-top: 10px;
+            gap: 10px;
+            margin-top: 20px;
             flex-wrap: wrap;
             justify-content: center;
         }
         
         button {
-            padding: 12px 28px;
+            padding: 12px 24px;
             font-size: 16px;
-            font-family: 'Playfair Display', serif;
-            font-weight: 700;
-            background: linear-gradient(135deg, #8b6f47 0%, #5c4033 100%);
+            background: #5c4033;
             color: #f4e4c1;
-            border: 2px solid #2c1810;
+            border: none;
             border-radius: 6px;
             cursor: pointer;
-            text-transform: uppercase;
-            letter-spacing: 1px;
-            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3);
-            transition: all 0.3s ease;
+            font-weight: bold;
         }
         
         button:hover {
-            background: linear-gradient(135deg, #a0826d 0%, #6b4423 100%);
-            transform: translateY(-2px);
+            background: #6b4423;
+        }
+        
+        .mode-selection, .hidden {
+            display: none;
+        }
+        
+        .mode-selection.active, .hidden.active {
+            display: flex;
         }
         
         .mode-selection {
-            display: flex;
             flex-direction: column;
             gap: 20px;
-            text-align: center;
+            align-items: center;
+            justify-content: center;
+            min-height: 60vh;
         }
         
         .mode-selection h1 {
             font-size: 36px;
             color: #2c1810;
-            text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.3);
             margin-bottom: 30px;
         }
         
@@ -109,44 +90,16 @@
             padding: 20px 40px;
             font-size: 20px;
             min-width: 280px;
-        }
-        
-        .mode-btn .icon {
-            font-size: 40px;
-            display: block;
-            margin-bottom: 10px;
-        }
-        
-        .mode-btn .title {
-            font-size: 22px;
-            font-weight: 700;
-        }
-        
-        .mode-btn .desc {
-            font-size: 14px;
-            opacity: 0.8;
-            margin-top: 5px;
-        }
-        
-        .hidden {
-            display: none !important;
+            text-align: center;
         }
     </style>
 </head>
 <body>
 
-    <div id="modeSelection" class="mode-selection">
+    <div id="modeSelection" class="mode-selection active">
         <h1>♔ Шахматы</h1>
-        <button class="mode-btn" onclick="startGame('bot')">
-            <span class="icon"></span>
-            <span class="title">Играть с ботом</span>
-            <span class="desc">Против компьютера</span>
-        </button>
-        <button class="mode-btn" onclick="startGame('local')">
-            <span class="icon">👥</span>
-            <span class="title">Играть с другом</span>
-            <span class="desc">Два игрока на одном устройстве</span>
-        </button>
+        <button class="mode-btn" onclick="startGame('bot')">🤖 Играть с ботом</button>
+        <button class="mode-btn" onclick="startGame('local')">👥 Играть с другом</button>
     </div>
 
     <div id="gameScreen" class="hidden">
@@ -173,34 +126,24 @@
         let board = null;
         let gameMode = null;
 
-        // SVG фигуры с ПРАВИЛЬНОЙ URL-кодировкой
-        const pieces = {
-            'wP': 'data:image/svg+xml,%3Csvg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 45 45"%3E%3Cpath d="M22.5 9c-2.21 0-4 1.79-4 4 0 .89.29 1.71.78 2.38C17.33 16.5 16 17.59 16 19c0 4.42 3.58 8 8 8s8-3.58 8-8c0-1.41-1.33-2.5-3.28-3.62.49-.67.78-1.49.78-2.38 0-2.21-1.79-4-4-4z" fill="white" stroke="black" stroke-width="1.5" stroke-linecap="round"/%3E%3Cpath d="M20 19h5M22.5 19v-2M20 21h5" stroke="black" stroke-width="1.5" stroke-linecap="round"/%3E%3Cpath d="M16.5 39h12M22.5 32v7M16 36.5h12" stroke="black" stroke-width="1.5" stroke-linecap="round"/%3E%3C/svg%3E',
-            'wN': 'data:image/svg+xml,%3Csvg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 45 45"%3E%3Cpath d="M22 10c10.5 1 16.5 8 16 22-2.5 5-9.5 7-14 6-10.5-1.5-10.5-15.5-4-20 2.5-2 5.5-2.5 8-2.5s6 1.5 6 3.5c0 2.5-2.5 3-4 3.5 1.5 3 2.5 6 2.5 9 0 8 7 14 15 14 10-1 15-10 15-15 0-6-4-12-10-15z" fill="white" stroke="black" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/%3E%3Cpath d="M24 18c.5-1 1.5-1.5 2-1.5M21.5 20h1.5M22.5 20v2" stroke="black" stroke-width="1.5" stroke-linecap="round"/%3E%3Cpath d="M21.5 30h2.5M22.5 30v4.5M16 33.5h13" stroke="black" stroke-width="1.5" stroke-linecap="round"/%3E%3C/svg%3E',
-            'wB': 'data:image/svg+xml,%3Csvg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 45 45"%3E%3Cg fill="none" fill-rule="evenodd" stroke="black" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"%3E%3Cpath d="M9 36c3.39-.49 6.87-2.48 8-4 1.13 1.52 4.61 3.51 8 4 3.39-.49 6.87-2.48 8-4 1.13 1.52 4.61 3.51 8 4 0 0-3.58 1.5-8 1.5-4.42 0-8-3.58-8-3.58s-3.58 3.58-8 3.58-8-1.5-8-1.5z" fill="white"/%3E%3Cpath d="M15 32c2.5 2.5 12.5 2.5 15 .5-1.5-3-1.5-6 0-9-2.5-2.5-12.5-2.5-15 0-.5 3-.5 6 0 9z" fill="white"/%3E%3Cpath d="M25 8c2.5-2.5 12.5-2.5 15 0 .5 3 .5 6 0 9-2.5 2.5-12.5 2.5-15 0-.5-3-.5-6 0-9z" fill="white"/%3E%3Cpath d="M20 24l5 0M23.5 17.5h3M22 14v3.5" stroke="black"/%3E%3C/g%3E%3C/svg%3E',
-            'wR': 'data:image/svg+xml,%3Csvg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 45 45"%3E%3Cg fill="white" fill-rule="evenodd" stroke="black" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"%3E%3Cpath d="M9 39h27v-3H9v3zM12 36v-4h21v4H12zM11 14h2v3h2v-2h2v3h2v-2h2v3h2v-2h2v3h2v-2h2v3h2v-2h2v3h2"/%3E%3Cpath d="M34 14l-3 3H14l-3-3"/%3E%3Cpath d="M13 27.5h19v5H13v-5z"/%3E%3C/g%3E%3C/svg%3E',
-            'wQ': 'data:image/svg+xml,%3Csvg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 45 45"%3E%3Cg fill="white" fill-rule="evenodd" stroke="black" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"%3E%3Cpath d="M9 26c8.5-1.5 21-1.5 27 0l2-12-7 11V11l-5 17-5-17v14L7 14l2 12z"/%3E%3Cpath d="M9 26c0 2 1.5 2 2.5 4 1 2.5 1 4 1 4 9-2.5 18-2.5 27 0 0 0 0-1.5 1-4 1-2 2.5-2 2.5-4-9-2.5-18-2.5-27 0z"/%3E%3Cpath d="M12 35a5 5 0 1 1 10 0 5 5 0 0 1-10 0zM25 35a5 5 0 1 1 10 0 5 5 0 0 1-10 0z"/%3E%3Cpath d="M20 14a2 2 0 1 1-4 0 2 2 0 0 1 4 0zM29 14a2 2 0 1 1-4 0 2 2 0 0 1 4 0z"/%3E%3Cpath d="M16 12.5a1.5 1.5 0 1 1-3 0 1.5 1.5 0 0 1 3 0zM32 12.5a1.5 1.5 0 1 1-3 0 1.5 1.5 0 0 1 3 0zM38 12.5a1.5 1.5 0 1 1-3 0 1.5 1.5 0 0 1 3 0z"/%3E%3C/g%3E%3C/svg%3E',
-            'wK': 'data:image/svg+xml,%3Csvg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 45 45"%3E%3Cg fill="none" fill-rule="evenodd" stroke="black" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"%3E%3Cpath d="M22.5 11.63V6M20 8h5" fill="white" stroke="black"/%3E%3Cpath d="M22.5 25s4.5-7.5 7-7.5c3.5 0 3 5 3 5-2.5 2.5-7 6.5-7 9.5s-1.5 5-2.5 5h-5c-1 0-1.5-1.5-2.5-5s-4.5-7-7-9.5c0-2-.5-5 3-5 2.5 0 7 7.5 7 7.5z" fill="white"/%3E%3Cpath d="M11.5 37c5.5 3.5 15.5 3.5 21 0v-7s9-1.5 6-5.5c-4-3.5-8-3.5-8-3.5 0 0-.5-.5-.5-.5h5c2.5 0 3.5-.5 4-1.5-.5-1-1.5-2.5-2.5-3.5-1-1.5-2.5-2.5-4-2.5-2.5 0-3.5 2-4 3.5-.5 1.5-1.5 2.5-2.5 2.5s-1.5-1-2.5-2.5c-1-1.5-2-3.5-4-3.5-1.5 0-3 1-4 2.5-1 1-2 2.5-2.5 3.5.5 1 1.5 1.5 4 1.5h5s0 .5-.5.5c0 0-4 0-8 3.5-3 4 6 5.5 6 5.5v7z" fill="white"/%3E%3C/g%3E%3C/svg%3E',
-            'bP': 'data:image/svg+xml,%3Csvg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 45 45"%3E%3Cpath d="M22.5 9c-2.21 0-4 1.79-4 4 0 .89.29 1.71.78 2.38C17.33 16.5 16 17.59 16 19c0 4.42 3.58 8 8 8s8-3.58 8-8c0-1.41-1.33-2.5-3.28-3.62.49-.67.78-1.49.78-2.38 0-2.21-1.79-4-4-4z" fill="black" stroke="black" stroke-width="1.5" stroke-linecap="round"/%3E%3Cpath d="M20 19h5M22.5 19v-2M20 21h5" stroke="white" stroke-width="1.5" stroke-linecap="round"/%3E%3Cpath d="M16.5 39h12M22.5 32v7M16 36.5h12" stroke="white" stroke-width="1.5" stroke-linecap="round"/%3E%3C/svg%3E',
-            'bN': 'data:image/svg+xml,%3Csvg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 45 45"%3E%3Cpath d="M22 10c10.5 1 16.5 8 16 22-2.5 5-9.5 7-14 6-10.5-1.5-10.5-15.5-4-20 2.5-2 5.5-2.5 8-2.5s6 1.5 6 3.5c0 2.5-2.5 3-4 3.5 1.5 3 2.5 6 2.5 9 0 8 7 14 15 14 10-1 15-10 15-15 0-6-4-12-10-15z" fill="black" stroke="black" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/%3E%3Cpath d="M24 18c.5-1 1.5-1.5 2-1.5M21.5 20h1.5M22.5 20v2" stroke="white" stroke-width="1.5" stroke-linecap="round"/%3E%3Cpath d="M21.5 30h2.5M22.5 30v4.5M16 33.5h13" stroke="white" stroke-width="1.5" stroke-linecap="round"/%3E%3C/svg%3E',
-            'bB': 'data:image/svg+xml,%3Csvg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 45 45"%3E%3Cg fill="none" fill-rule="evenodd" stroke="black" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"%3E%3Cpath d="M9 36c3.39-.49 6.87-2.48 8-4 1.13 1.52 4.61 3.51 8 4 3.39-.49 6.87-2.48 8-4 1.13 1.52 4.61 3.51 8 4 0 0-3.58 1.5-8 1.5-4.42 0-8-3.58-8-3.58s-3.58 3.58-8 3.58-8-1.5-8-1.5z" fill="black"/%3E%3Cpath d="M15 32c2.5 2.5 12.5 2.5 15 .5-1.5-3-1.5-6 0-9-2.5-2.5-12.5-2.5-15 0-.5 3-.5 6 0 9z" fill="black"/%3E%3Cpath d="M25 8c2.5-2.5 12.5-2.5 15 0 .5 3 .5 6 0 9-2.5 2.5-12.5 2.5-15 0-.5-3-.5-6 0-9z" fill="black"/%3E%3Cpath d="M20 24l5 0M23.5 17.5h3M22 14v3.5" stroke="white"/%3E%3C/g%3E%3C/svg%3E',
-            'bR': 'data:image/svg+xml,%3Csvg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 45 45"%3E%3Cg fill="black" fill-rule="evenodd" stroke="black" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"%3E%3Cpath d="M9 39h27v-3H9v3zM12 36v-4h21v4H12zM11 14h2v3h2v-2h2v3h2v-2h2v3h2v-2h2v3h2v-2h2v3h2v-2h2v3h2"/%3E%3Cpath d="M34 14l-3 3H14l-3-3"/%3E%3Cpath d="M13 27.5h19v5H13v-5z"/%3E%3C/g%3E%3C/svg%3E',
-            'bQ': 'data:image/svg+xml,%3Csvg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 45 45"%3E%3Cg fill="black" fill-rule="evenodd" stroke="black" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"%3E%3Cpath d="M9 26c8.5-1.5 21-1.5 27 0l2-12-7 11V11l-5 17-5-17v14L7 14l2 12z"/%3E%3Cpath d="M9 26c0 2 1.5 2 2.5 4 1 2.5 1 4 1 4 9-2.5 18-2.5 27 0 0 0 0-1.5 1-4 1-2 2.5-2 2.5-4-9-2.5-18-2.5-27 0z"/%3E%3Cpath d="M12 35a5 5 0 1 1 10 0 5 5 0 0 1-10 0zM25 35a5 5 0 1 1 10 0 5 5 0 0 1-10 0z"/%3E%3Cpath d="M20 14a2 2 0 1 1-4 0 2 2 0 0 1 4 0zM29 14a2 2 0 1 1-4 0 2 2 0 0 1 4 0z"/%3E%3Cpath d="M16 12.5a1.5 1.5 0 1 1-3 0 1.5 1.5 0 0 1 3 0zM32 12.5a1.5 1.5 0 1 1-3 0 1.5 1.5 0 0 1 3 0zM38 12.5a1.5 1.5 0 1 1-3 0 1.5 1.5 0 0 1 3 0z"/%3E%3C/g%3E%3C/svg%3E',
-            'bK': 'data:image/svg+xml,%3Csvg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 45 45"%3E%3Cg fill="none" fill-rule="evenodd" stroke="black" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"%3E%3Cpath d="M22.5 11.63V6M20 8h5" fill="black" stroke="black"/%3E%3Cpath d="M22.5 25s4.5-7.5 7-7.5c3.5 0 3 5 3 5-2.5 2.5-7 6.5-7 9.5s-1.5 5-2.5 5h-5c-1 0-1.5-1.5-2.5-5s-4.5-7-7-9.5c0-2-.5-5 3-5 2.5 0 7 7.5 7 7.5z" fill="black"/%3E%3Cpath d="M11.5 37c5.5 3.5 15.5 3.5 21 0v-7s9-1.5 6-5.5c-4-3.5-8-3.5-8-3.5 0 0-.5-.5-.5-.5h5c2.5 0 3.5-.5 4-1.5-.5-1-1.5-2.5-2.5-3.5-1-1.5-2.5-2.5-4-2.5-2.5 0-3.5 2-4 3.5-.5 1.5-1.5 2.5-2.5 2.5s-1.5-1-2.5-2.5c-1-1.5-2-3.5-4-3.5-1.5 0-3 1-4 2.5-1 1-2 2.5-2.5 3.5.5 1 1.5 1.5 4 1.5h5s0 .5-.5.5c0 0-4 0-8 3.5-3 4 6 5.5 6 5.5v7z" fill="black"/%3E%3C/g%3E%3C/svg%3E'
-        };
-
         function startGame(mode) {
-            gameMode = mode;
-            document.getElementById('modeSelection').classList.add('hidden');
-            document.getElementById('gameScreen').classList.remove('hidden');
-            game.reset();
-            initBoard();
-            updateStatus();
+            try {
+                gameMode = mode;
+                document.getElementById('modeSelection').classList.remove('active');
+                document.getElementById('gameScreen').classList.add('active');
+                game.reset();
+                initBoard();
+                updateStatus();
+                console.log('Game started in mode:', mode);
+            } catch (e) {
+                console.error('Error starting game:', e);
+                alert('Ошибка: ' + e.message);
+            }
         }
 
         function backToMenu() {
-            document.getElementById('gameScreen').classList.add('hidden');
-            document.getElementById('modeSelection').classList.remove('hidden');
+            document.getElementById('gameScreen').classList.remove('active');
+            document.getElementById('modeSelection').classList.add('active');
             if (board) {
                 board.destroy();
                 board = null;
@@ -275,23 +218,29 @@
         }
 
         function initBoard() {
-            const config = {
-                draggable: true,
-                position: 'start',
-                pieceTheme: function(piece) {
-                    return pieces[piece];
-                },
-                onDragStart: onDragStart,
-                onDrop: onDrop,
-                onSnapEnd: onSnapEnd
-            };
-            
-            board = Chessboard('board', config);
+            try {
+                const config = {
+                    draggable: true,
+                    position: 'start',
+                    pieceTheme: 'https://upload.wikimedia.org/wikipedia/commons/thumb/1/10/Chess_%7Bpiece%7Ddt45.svg/60px-Chess_%7Bpiece%7Ddt45.svg.png',
+                    onDragStart: onDragStart,
+                    onDrop: onDrop,
+                    onSnapEnd: onSnapEnd
+                };
+                
+                board = Chessboard('board', config);
+                console.log('Board initialized');
+            } catch (e) {
+                console.error('Error initializing board:', e);
+                alert('Ошибка инициализации доски: ' + e.message);
+            }
         }
 
         window.addEventListener('resize', function() {
             if (board) board.resize();
         });
+
+        console.log('Script loaded successfully');
     </script>
 </body>
 </html>
